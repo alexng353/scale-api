@@ -6,7 +6,11 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 use utoipa_swagger_ui::SwaggerUi;
 
 // tags
-// use v1::{auth::AUTH_TAG, exercises::EXERCISES_TAG, muscles::MUSCLES_TAG};
+use v1::{
+    auth::AUTH_TAG,
+    // exercises::EXERCISES_TAG,
+    // muscles::MUSCLES_TAG
+};
 
 mod v1;
 mod structs;
@@ -26,8 +30,7 @@ pub(crate) use utoipa::ToSchema;
 #[derive(OpenApi)]
 #[openapi(
     tags(
-    (name = "test", description = "Test API endpoints"),
-        // (name = AUTH_TAG, description = "Authentication API endpoints"),
+        (name = AUTH_TAG, description = "Authentication API endpoints"),
         // (name = EXERCISES_TAG, description = "Exercise API endpoints"),
         // (name = MUSCLES_TAG, description = "Muscle API endpoints"),
         // (name = CUSTOMER_TAG, description = "Customer API endpoints"),
