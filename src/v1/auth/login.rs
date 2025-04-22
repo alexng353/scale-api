@@ -10,7 +10,7 @@ use util::auth::JWTClaims;
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct LoginBody {
-    username: String,
+    email: String,
     password: String,
 }
 
@@ -29,13 +29,13 @@ pub async fn login(
     State(state): State<AppState>,
     Json(body): Json<LoginBody>,
 ) -> (StatusCode, String) {
-    info!("User {} logging in", body.username);
+    info!("User {} logging in", body.email);
     // TODO: add indices on user for unique lowercase and search
     let user = query!(
-        "SELECT id, real_name, username, email, password_hash, is_admin, created_at
+        "SELECT id, real_name, email, password_hash, is_admin, created_at
         FROM users
-        WHERE username = $1 OR email = $1",
-        body.username,
+        WHERE email = $1",
+        body.email,
     )
     .fetch_one(&*state.db)
     .await;
@@ -59,8 +59,7 @@ pub async fn login(
         return (StatusCode::UNAUTHORIZED, "Incorrect password".into());
     }
 
-    let claims =
-        JWTClaims::new(user.id, user.username, user.real_name, user.email);
+    let claims = JWTClaims::new(user.id, user.real_name, user.email);
     let token_str = match claims.sign_with_key(&state.jwt_key) {
         Ok(token_str) => token_str,
         Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),

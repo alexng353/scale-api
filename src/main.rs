@@ -1,7 +1,7 @@
 use hmac::{Hmac, Mac};
 use std::{net::Ipv4Addr, sync::Arc};
 use tokio::net::TcpListener;
-use utoipa::OpenApi;
+use utoipa::{openapi::Server, Modify, OpenApi};
 use utoipa_axum::{router::OpenApiRouter, routes};
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -37,8 +37,19 @@ pub(crate) use utoipa::ToSchema;
         // (name = CUSTOMER_TAG, description = "Customer API endpoints"),
         // (name = ORDER_TAG, description = "Order API endpoints")
     ),
+    modifiers(&ServerAddon)
 )]
 struct ApiDoc;
+
+struct ServerAddon;
+impl Modify for ServerAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        openapi.servers = Some(vec![
+            Server::new("http://localhost:8080"),
+            Server::new("https://api.scale.com"),
+        ]);
+    }
+}
 
 /// Get health of the API.
 #[utoipa::path(
@@ -91,11 +102,21 @@ async fn main() -> anyhow::Result<()> {
         .nest("/api/v1", v1::router(state.clone()))
         .split_for_parts();
 
-    let router = router
-        .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", api.clone()));
+    std::fs::write("openapi.json", api.to_pretty_json()?.as_bytes()).unwrap();
 
-    info!("Listening on http://localhost:{port}");
-    let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, port)).await?;
+    let swagger_ui = SwaggerUi::new("/docs").url("/docs/openapi.json", api);
+    let router = router.merge(swagger_ui);
+
+    let listener = match TcpListener::bind((Ipv4Addr::LOCALHOST, port)).await {
+        Ok(listener) => {
+            info!("Listening on http://localhost:{port}");
+            listener
+        }
+        Err(e) => {
+            error!("Failed to bind to port {port}: {e}");
+            std::process::exit(1);
+        }
+    };
     axum::serve(listener, router).await?;
 
     Ok(())

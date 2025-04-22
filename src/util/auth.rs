@@ -9,25 +9,18 @@ pub struct JWTClaims {
     pub iat: i64,
     pub exp: i64,
 
-    pub username: String,
     pub real_name: String,
     pub email: String,
 }
 
 impl JWTClaims {
-    pub fn new(
-        sub: Uuid,
-        username: String,
-        real_name: String,
-        email: String,
-    ) -> Self {
+    pub fn new(sub: Uuid, real_name: String, email: String) -> Self {
         let iat = Utc::now().timestamp();
         let exp = iat + 60 * 60 * 24 * 7;
         Self {
             sub,
             iat,
             exp,
-            username,
             real_name,
             email,
         }

@@ -4,5 +4,5 @@ CREATE TABLE IF NOT EXISTS weights (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   user_id UUID NOT NULL REFERENCES users(id),
   weightLBs FLOAT NOT NULL,
-  weightKGs FLOAT NOT NULL,
+  weightKGs FLOAT NOT NULL
 );

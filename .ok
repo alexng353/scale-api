@@ -1,1 +1,1 @@
-dev: cargo watch -x r
+dev: cargo watch -x r -i openapi.json
