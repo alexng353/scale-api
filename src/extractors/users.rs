@@ -31,8 +31,7 @@ where
             .ok_or(AppError::Error(Errors::Unauthorized))?
             .to_str()
             .map_err(|_| AppError::Error(Errors::Unauthorized))?
-            .strip_prefix("Bearer ")
-            .ok_or(AppError::Error(Errors::Unauthorized))?;
+            .trim_start_matches("Bearer ");
 
         let claims: JWTClaims = jwt_string
             .verify_with_key(&state.jwt_key)

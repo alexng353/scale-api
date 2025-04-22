@@ -30,11 +30,12 @@ impl LogWeightBody {
     tag = super::WEIGHT_TAG
 )]
 pub async fn log_weight(
-    State(state): State<AppState>,
     UserId(user_id): UserId,
+    State(state): State<AppState>,
     Json(body): Json<LogWeightBody>,
 ) -> Result<String, AppError> {
     let (weight_lbs, weight_kgs) = body.as_both_units();
+    info!("logging weight for user {} @ {} LBs", user_id, weight_lbs);
 
     let result = sqlx::query!(
         "INSERT INTO weights (user_id, weightLBs, weightKGs)
