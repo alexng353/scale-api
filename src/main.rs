@@ -1,5 +1,5 @@
-use std::{net::Ipv4Addr, sync::Arc};
 use hmac::{Hmac, Mac};
+use std::{net::Ipv4Addr, sync::Arc};
 use tokio::net::TcpListener;
 use utoipa::OpenApi;
 use utoipa_axum::{router::OpenApiRouter, routes};
@@ -12,19 +12,20 @@ use v1::{
     // muscles::MUSCLES_TAG
 };
 
-mod v1;
-mod structs;
-mod state;
 mod db;
 mod error;
-mod util;
 mod extractors;
+mod state;
+mod structs;
+mod util;
+mod v1;
 
 pub(crate) use anyhow::Context;
 pub(crate) use axum::extract::{Json, State};
 pub(crate) use error::{AnyhowError, AppError, Errors};
 pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use state::AppState;
+pub(crate) use tracing::{debug, error, info, trace, warn};
 pub(crate) use utoipa::ToSchema;
 
 #[derive(OpenApi)]
@@ -52,9 +53,7 @@ async fn health_check() -> &'static str {
 }
 
 #[utoipa::path(
-    get, 
-    path = "/",
-    responses(
+    get, path = "/", responses(
         (status = OK, description = "Success", body = str, content_type = "text/plain")
     )
 )]
@@ -65,13 +64,24 @@ async fn index() -> &'static str {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
-    let port: u16 = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string()).parse()?;
-    let jwt_secret = std::env::var("JWT_SECRET").unwrap_or_else(|_| "secret".to_string());
+    let port: u16 = std::env::var("PORT")
+        .unwrap_or_else(|_| "8080".to_string())
+        .parse()?;
+    let jwt_secret =
+        std::env::var("JWT_SECRET").unwrap_or_else(|_| "secret".to_string());
+
+    if !cfg!(debug_assertions) && jwt_secret == "secret" {
+        panic!("JWT_SECRET is not set. Defaulting to 'secret'");
+    }
+
+    let subscriber = tracing_subscriber::FmtSubscriber::new();
+    tracing::subscriber::set_global_default(subscriber)?;
 
     let db = db::db().await?;
     let state = state::AppState {
         db: Arc::new(db),
-        jwt_key: Hmac::new_from_slice(jwt_secret.as_bytes()).context("Failed to create HMAC")? 
+        jwt_key: Hmac::new_from_slice(jwt_secret.as_bytes())
+            .context("Failed to create HMAC")?,
     };
 
     let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
@@ -81,11 +91,10 @@ async fn main() -> anyhow::Result<()> {
         .nest("/api/v1", v1::router(state.clone()))
         .split_for_parts();
 
-    let router = router.merge(
-        SwaggerUi::new("/docs").url("/docs/openapi.json",api.clone())
-    );
+    let router = router
+        .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", api.clone()));
 
-    println!("Listening on http://localhost:{port}");
+    info!("Listening on http://localhost:{port}");
     let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, port)).await?;
     axum::serve(listener, router).await?;
 

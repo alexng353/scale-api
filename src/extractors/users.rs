@@ -19,7 +19,10 @@ where
 {
     type Rejection = AppError;
 
-    async fn from_request_parts(parts: &mut Parts, s: &S) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(
+        parts: &mut Parts,
+        s: &S,
+    ) -> Result<Self, Self::Rejection> {
         let state = AppState::from_ref(s);
 
         let jwt_string = parts

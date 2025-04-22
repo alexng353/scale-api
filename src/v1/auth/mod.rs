@@ -2,8 +2,8 @@ use crate::AppState;
 
 pub(super) use super::*;
 
-pub mod signup;
 pub mod login;
+pub mod signup;
 
 pub const AUTH_TAG: &str = "auth";
 

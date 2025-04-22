@@ -1,0 +1,1 @@
+dev: cargo watch -x r

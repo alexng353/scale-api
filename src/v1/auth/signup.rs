@@ -41,11 +41,14 @@ pub async fn signup(
     .fetch_one(&*state.db)
     .await?;
 
-    let claims = JWTClaims::new(user.id, user.username, user.real_name, user.email);
+    let claims =
+        JWTClaims::new(user.id, user.username, user.real_name, user.email);
 
     let token_str = claims
         .sign_with_key(&state.jwt_key)
         .context("Failed to sign JWT")?;
 
+    println!("{}", token_str);
+    println!("Token Length: {}", token_str.len());
     Ok(token_str)
 }

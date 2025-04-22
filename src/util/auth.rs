@@ -15,7 +15,12 @@ pub struct JWTClaims {
 }
 
 impl JWTClaims {
-    pub fn new(sub: Uuid, username: String, real_name: String, email: String) -> Self {
+    pub fn new(
+        sub: Uuid,
+        username: String,
+        real_name: String,
+        email: String,
+    ) -> Self {
         let iat = Utc::now().timestamp();
         let exp = iat + 60 * 60 * 24 * 7;
         Self {
@@ -28,22 +33,22 @@ impl JWTClaims {
         }
     }
 
-    /// Create a new JWT Claims with a custom expiration time. Expiration time is added to current time.
-    pub fn new_with_exp(
-        sub: Uuid,
-        username: String,
-        real_name: String,
-        email: String,
-        exp: i64,
-    ) -> Self {
-        let iat = Utc::now().timestamp();
-        Self {
-            sub,
-            iat,
-            exp: iat + exp,
-            username,
-            real_name,
-            email,
-        }
-    }
+    // /// Create a new JWT Claims with a custom expiration time. Expiration time is added to current time.
+    // pub fn new_with_exp(
+    //     sub: Uuid,
+    //     username: String,
+    //     real_name: String,
+    //     email: String,
+    //     exp: i64,
+    // ) -> Self {
+    //     let iat = Utc::now().timestamp();
+    //     Self {
+    //         sub,
+    //         iat,
+    //         exp: iat + exp,
+    //         username,
+    //         real_name,
+    //         email,
+    //     }
+    // }
 }
