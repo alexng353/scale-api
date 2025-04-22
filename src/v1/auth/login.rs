@@ -19,11 +19,9 @@ pub struct LoginBody {
     post,
     path = "/login",
     responses(
-        (status = OK, body = String),
-        (status = BAD_REQUEST, body = String),
-        (status = UNAUTHORIZED, body = String),
-        (status = NOT_FOUND, body = String),
-        (status = INTERNAL_SERVER_ERROR, body = String)
+        (status = OK, body = String, description = "JWT token"),
+        (status = UNAUTHORIZED, body = String, description = "Incorrect password"),
+        (status = NOT_FOUND, body = String, description = "User not found"),
     ),
     tag = super::AUTH_TAG
 )]
@@ -32,6 +30,7 @@ pub async fn login(
     Json(body): Json<LoginBody>,
 ) -> (StatusCode, String) {
     info!("User {} logging in", body.username);
+    // TODO: add indices on user for unique lowercase and search
     let user = query!(
         "SELECT id, real_name, username, email, password_hash, is_admin, created_at
         FROM users
