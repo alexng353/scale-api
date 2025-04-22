@@ -1,6 +1,7 @@
 FROM rust:1-bookworm AS template
 
-ARG DATABASE_URL
+ARG DATABASE_PUBLIC_URL
+ENV DATABASE_URL=$DATABASE_PUBLIC_URL
 
 RUN apt-get update && apt-get install -y \
     libssl-dev \
