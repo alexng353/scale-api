@@ -16,6 +16,7 @@ RUN cargo install sqlx-cli
 
 COPY ./migrations /app/migrations
 
+RUN echo "DATABASE_URL=$DATABASE_PUBLIC_URL" > .env
 RUN cargo sqlx migrate run
 
 FROM template AS builder
