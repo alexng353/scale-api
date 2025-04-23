@@ -31,6 +31,6 @@ FROM template AS runner
 
 WORKDIR /app
 
-COPY --from=builder /app/target/release/rusty-api /app/rusty-api
+COPY --from=builder /app/target/release/scale-api /app/scale-api
 
-CMD [ "/app/rusty-api" ]
+CMD [ "/app/scale-api" ]
