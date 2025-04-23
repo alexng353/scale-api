@@ -80,7 +80,6 @@ async fn main() -> anyhow::Result<()> {
         .parse()?;
     let jwt_secret =
         std::env::var("JWT_SECRET").unwrap_or_else(|_| "secret".to_string());
-    dbg!("JWT_SECRET: {jwt_secret}");
 
     if !cfg!(debug_assertions) && jwt_secret == "secret" {
         panic!("JWT_SECRET is not set. Defaulting to 'secret'");
