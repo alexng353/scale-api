@@ -1,9 +1,20 @@
+use uuid::Uuid;
+
 use crate::{extractors::users::UserId, *};
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(sqlx::Type, Serialize, Deserialize, ToSchema)]
+#[sqlx(type_name = "weight_unit")]
 pub enum WeightUnit {
+    #[sqlx(rename = "LBs")]
     LBs,
+    #[sqlx(rename = "KGs")]
     KGs,
+}
+
+#[derive(Serialize, Deserialize, ToSchema, sqlx::FromRow)]
+pub struct WeightRowReturning {
+    id: Uuid,
+    unit: WeightUnit, // for casting reasons (sqlx funny behaviour)
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
@@ -29,6 +40,7 @@ impl LogWeightBody {
     ),
     tag = super::WEIGHT_TAG
 )]
+#[axum::debug_handler]
 pub async fn log_weight(
     UserId(user_id): UserId,
     State(state): State<AppState>,
@@ -37,16 +49,31 @@ pub async fn log_weight(
     let (weight_lbs, weight_kgs) = body.as_both_units();
     info!("logging weight for user {} @ {} LBs", user_id, weight_lbs);
 
-    let result = sqlx::query!(
-        "INSERT INTO weights (user_id, weightLBs, weightKGs)
-        VALUES ($1, $2, $3)
-        RETURNING id",
+    let result = sqlx::query_as!(
+        WeightRowReturning,
+        r#"INSERT INTO weights (
+            user_id,
+            weightLBs,
+            weightKGs,
+            unit
+        )
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, unit as "unit!: WeightUnit""#r,
         user_id,
         weight_lbs,
-        weight_kgs
+        weight_kgs,
+        body.unit as WeightUnit
     )
     .fetch_one(&*state.db)
-    .await?;
+    .await;
 
-    Ok(result.id.to_string())
+    let id = match result {
+        Ok(row) => row.id,
+        Err(err) => {
+            error!("failed to log weight: {}", err);
+            panic!("failed to log weight: {}", err);
+        }
+    };
+
+    Ok(id.to_string())
 }

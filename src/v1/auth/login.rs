@@ -35,7 +35,7 @@ pub async fn login(
         "SELECT id, real_name, email, password_hash, is_admin, created_at
         FROM users
         WHERE email = $1",
-        body.email,
+        body.email.to_lowercase()
     )
     .fetch_one(&*state.db)
     .await;

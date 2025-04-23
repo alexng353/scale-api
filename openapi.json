@@ -134,6 +134,70 @@
         }
       }
     },
+    "/api/v1/user/self": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Get self",
+        "operationId": "get_self",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/weight/get_weight": {
+      "get": {
+        "tags": [
+          "weight"
+        ],
+        "summary": "Get weights. Automatically calculates offset based on limit and page.",
+        "operationId": "get_weights",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeightResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/weight/log_weight": {
       "post": {
         "tags": [
@@ -214,6 +278,53 @@
           },
           "real_name": {
             "type": "string"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "real_name",
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "real_name": {
+            "type": "string"
+          }
+        }
+      },
+      "WeightResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "weight_lbs",
+          "weight_kgs",
+          "created_at"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "weight_kgs": {
+            "type": "number",
+            "format": "double"
+          },
+          "weight_lbs": {
+            "type": "number",
+            "format": "double"
           }
         }
       },

@@ -33,7 +33,7 @@ pub async fn signup(
         VALUES ($1, $2, $3)
         RETURNING id, real_name, email, password_hash, is_admin, created_at",
         body.real_name,
-        body.email,
+        body.email.to_lowercase(),
         hash
     )
     .fetch_one(&*state.db)
