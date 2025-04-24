@@ -46,7 +46,7 @@ impl Modify for ServerAddon {
     fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
         openapi.servers = Some(vec![
             Server::new("http://localhost:8080"),
-            Server::new("https://api.scale.com"),
+            Server::new("scale-api-production.up.railway.app"),
         ]);
     }
 }
@@ -80,6 +80,9 @@ async fn main() -> anyhow::Result<()> {
         .parse()?;
     let jwt_secret =
         std::env::var("JWT_SECRET").unwrap_or_else(|_| "secret".to_string());
+    let is_prod = std::env::var("RAILWAY_PROJECT_ID").is_ok();
+
+    info!("Starting in {}" is_prod ? "production" : "development");
 
     if !cfg!(debug_assertions) && jwt_secret == "secret" {
         panic!("JWT_SECRET is not set. Defaulting to 'secret'");
@@ -107,9 +110,20 @@ async fn main() -> anyhow::Result<()> {
     let swagger_ui = SwaggerUi::new("/docs").url("/docs/openapi.json", api);
     let router = router.merge(swagger_ui);
 
-    let listener = match TcpListener::bind((Ipv4Addr::LOCALHOST, port)).await {
+    let addr = if is_prod {
+        Ipv4Addr::UNSPECIFIED
+    } else {
+        Ipv4Addr::LOCALHOST
+    };
+    let host = if is_prod {
+        format!("scale-api-production.up.railway.app:{port}")
+    } else {
+        format!("http://localhost:{port}")
+    };
+
+    let listener = match TcpListener::bind((addr, port)).await {
         Ok(listener) => {
-            info!("Listening on http://localhost:{port}");
+            info!("Listening on {host}");
             listener
         }
         Err(e) => {
